@@ -1,0 +1,42 @@
+Azure CAPSTONE project:
+
+-> Create 4 VM's VM1,VM2,VM3,VM4
+   2 in central US under 
+   2 in UK south
+
+-> Create a storage account
+-> Create a container
+-> Enable static website under -> Static website -> Enter the file name save
+-> Click on $web -> Click on Upload -> upload the error.html file
+
+-> Creating the 2 application gateway
+-> Frontends -> Create a new IP
+-> Backends create 2 pools and link it to VM1 and VM2
+-> in the routing rule add the end point of the storage static website in the Custom error pages in Bad Gateway - 502 and Forbidden - 403 with the file extenstion <website url>/error.html
+-> Configure the backend targets -> Add
+
+-> Launch all 4 VM's to configure
+-> Clone the Git Repository
+git clone https://github.com/azcloudberg/azproject.git
+cd azproject
+
+-> Configure the VM's
+-> Create a traffic manager
+
+-> configure the DNS in both the application gateway
+
+-> Set the endpoints in the Trafic manager
+-> Copy the dns from the Traffic manager and paste it in browser
+
+Output attached in external folder.
+
+
+
+
+
+
+
+
+
+
+  
