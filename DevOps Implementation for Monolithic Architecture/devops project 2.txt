@@ -1,0 +1,95 @@
+Problem solution:
+
+-> Launch a instance with T2 medium which will have terraform, ansible and jenkins 
+-> Insatlling terraform 
+
+- sudo apt update
+-wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+-sudo apt update && sudo apt install terraform
+
+-> Creating a trraform file to deploy rest of the resources Machine2,3,4
+
+-> terraform init
+
+provider "aws" {
+  region = "us-west-1"
+  access_key = "AKIARVZYG5X7DTXR6X7D"
+  secret_key = "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"
+}
+resource "aws_instance" "kubemaster" {
+  ami           = "ami-0cbd40f694b804622"
+  instance_type = "t3.medium"
+  key_name= "california"
+  tags = {
+    Name = "Machine3"
+  }
+}
+resource "aws_instance" "kubeSlave1" {
+  ami           = "ami-0cbd40f694b804622"
+  instance_type = "t3.micro"
+  key_name= "california"
+  tags = {
+    Name = "Machine2"
+  }
+}
+resource "aws_instance" "kubeSlave2" {
+  ami           = "ami-0cbd40f694b804622"
+  instance_type = "t3.micro"
+  key_name= "california"
+  tags = {
+    Name = "Machine1"
+  }
+}
+
+-> terraform plan
+-> terraform apply
+
+-> Install ansible on machine 1 and connect it with all the machines
+
+-> sudo apt update
+-> sudo apt install software-properties-common
+-> sudo add-apt-repository --yes --update ppa:ansible/ansible
+-> sudo apt install ansible
+
+Generate a key for authentication
+
+-> ssh-keygen
+-> cd /home/ubuntu/.ssh
+-> cat id_rsa.pub
+
+Copy the key to both your slave
+
+in slaves:
+
+-> sudo apt update
+
+Paste the authentication key in the following directory
+
+->  sudo nano .ssh/authorized_keys
+
+Adding the slave IP's in master
+
+-> cd /etc/ansible
+-> ls
+-> sudo nano hosts
+
+to create group (syntax: [name_of_the_group])
+
+Machine1 ansible_host=172.31.44.86
+Machine2 ansible_host=172.31.46.242
+
+Ping to slave 
+
+-> ansible -m ping Machine1
+
+	or
+
+-> ansible -m ping <group_name>
+
+	or
+
+-> ansible -m ping all
+
+-> Creating script to install the following Jenkins and java on worker 1, Docker and kubernetes on worker 2, java, docker and kubernetes on worker 3, docker and kubernetes on worker 4
+
