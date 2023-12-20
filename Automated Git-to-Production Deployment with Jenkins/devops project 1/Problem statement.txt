@@ -1,0 +1,167 @@
+
+Answer:
+
+Launch 3 instances:
+
+1 Master(ansible, jenkins)
+2 Slave(build, test)
+3 Slave(prod)
+
+Install ansible and configuring on master and slave:
+
+On master:
+
+-> sudo apt update
+-> sudo apt install software-properties-common
+-> sudo add-apt-repository --yes --update ppa:ansible/ansible
+-> sudo apt install ansible
+
+Generate a key for authentication
+
+-> ssh-keygen
+-> cd /home/ubuntu/.ssh
+-> cat id_rsa.pub
+
+Copy the key to both your slave
+
+in slaves:
+
+-> sudo apt update
+
+Paste the authentication key in the following directory
+
+->  sudo nano .ssh/authorized_keys
+
+Adding the slave IP's in master
+
+-> cd /etc/ansible
+-> ls
+-> sudo nano hosts
+
+to create group (syntax: [name_of_the_group])
+
+slave1 ansible_host=172.31.44.86
+slave2 ansible_host=172.31.46.242
+
+Ping to slave 
+
+-> ansible -m ping all
+
+Creating playbook:
+
+-> sudo nano install.yaml
+
+---
+- name: to be run on master
+  hosts: localhost
+  become: true
+  tasks:
+  - name: script execution
+    script: master.sh
+- name: to be run on slave
+  hosts: all
+  become: true
+  tasks:
+  - name: slave execution
+    script: slave.sh
+
+-> sudo nano master.sh
+
+curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install openjdk-11-jdk -y
+sudo apt-get install jenkins -y
+
+-> sudo nano slave.sh
+
+sudo apt-get update
+sudo apt-get install openjdk-11-jdk -y
+sudo apt install docker.io
+
+Run the ansible file:
+
+Syntax check
+
+->  ansible-playbook install.yaml --syntax-check
+
+Test check:
+
+-> ansible-playbook install.yaml --check
+
+Run Playbook:
+
+-> ansible-playbook install.yaml
+
+Setting up Jenkins dashboard:
+
+-> Launch Jenkins by pasting the private IP in the browser in port :8080
+-> to get jenkins password 
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Add nodes to the jenkins:
+
+-> in the jenkins dashboard -> Manage jenkin -> nodes -> Click on add node -> Enter the Remote root directory -> /home/ubuntu/jenkins
+   - launch method -> launch via ssh
+     Host -> ip of slave 
+     -> For credentials copy the contents of the key pair 
+     -> Change the Host Key Verification Strategy to non verifying verification strategy
+
+Creating a docker file: 
+
+-> Fork the GIT repository that has been provided 
+-> click on add file -> Create new file -> name the file -> enter the commands that you want to run in the container 
+FROM ubuntu
+RUN sudo apt update
+RUN sudo apt-get install 
+ADD . /var/www/html
+ENTRYPOINT apchectl -D FOREGROUND
+-> CLick on commit changes
+
+-> Create a new branch develop in the git repository
+
+Creating a JOB on jenkins:
+
+JOB 1:
+
+-> on the jenkins dashboard -> click on create new JOB
+-> Enter a job name -> select freestyle project
+-> enable "Restrict where this project can be run"
+-> In source code management select git -> Copy the repo URL
+-> To automate the build 
+	- in the build step -> Select the Execute shell (To get the path of the jenkins job go to slave -> cd jenkins -> cd workspace -> cd job1)
+	-> #sudo docker rm -f container1
+	-> sudo docker build /home/ubuntu/jenkins/workspace/job1/ -t jobimage
+	-> sudo docker run -itd -p 83:80 --name=container1 jobimage
+
+-> Create a webhook
+	-Enable "GitHub hook trigger for GITScm polling"
+	-Go to github -> Settings -> webhook -> add webhook -> copy the jenkins url paste it in the paload url with github-webhook in the end.
+
+
+Job2 & job 3: Follow same steps as JOB 1 
+
+Note: Job 3 on master branch
+
+
+
+
+
+
+	
+
+
+     
+
+
+
+
+
+
+
+
+
+
